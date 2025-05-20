@@ -3,6 +3,8 @@ package com.uad.services;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.uad.dto.UserResponseDTO;
 import com.uad.entities.UserEntity;
 import com.uad.repositories.UserRepository;
 
