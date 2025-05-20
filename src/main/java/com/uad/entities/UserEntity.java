@@ -1,6 +1,9 @@
 package com.uad.entities;
 
 import java.util.Date;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import jakarta.persistence.Entity;
@@ -28,6 +31,14 @@ public class UserEntity {
 	@Column(name = "email")
     private String email;
     
-	@Column(name = "password")
-    private String password;
+	 @Column(nullable = false)
+	    private String password;
+
+	  // Método para cifrar el password antes de guardar
+	    @PrePersist
+	    public void prePersist() {
+	        if (this.password != null && !this.password.startsWith("$2a$")) {
+	            this.password = new BCryptPasswordEncoder().encode(this.password);
+	        }
+	    }
 }

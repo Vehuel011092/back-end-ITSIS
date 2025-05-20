@@ -22,4 +22,13 @@ public class UserService {
     public UserEntity saveUser(UserEntity user) {
         return userRepository.save(user);
     }
+    
+
+    public UserResponseDTO registerUser(UserEntity user) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("El email ya está registrado");
+        }
+        UserEntity savedUser = userRepository.save(user);
+        return new UserResponseDTO(savedUser);
+    }
 }
