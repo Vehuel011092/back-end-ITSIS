@@ -11,6 +11,7 @@ import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,11 +28,13 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil, UserRepository userRepository ) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder  ) {
         this.authService = authService;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -39,19 +42,42 @@ public class AuthController {
         String email = credentials.get("email");
         String password = credentials.get("password");
         
-        UserEntity user = authService.authenticateUser(email, password);
-        
-        if (user == null) {
-            return ResponseEntity.status(401).body("Credenciales inválidas");
-        }
+        try {
+            // 1. Verificar si el usuario existe
+            UserEntity user = userRepository.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.ok(Map.of(
+                    "status", "error",
+                    "code", "USER_NOT_FOUND",
+                    "message", "El correo no está registrado"
+                ));
+            }
 
-        String token = jwtUtil.generateToken(authService.loadUserByUsername(email));
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("user", user);
-        
-        return ResponseEntity.ok(response);
+            // 2. Validar contraseña
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                return ResponseEntity.ok(Map.of(
+                    "status", "error",
+                    "code", "INVALID_PASSWORD",
+                    "message", "Contraseña incorrecta"
+                ));
+            }
+
+            // 3. Generar token si todo es correcto
+            String token = jwtUtil.generateToken(authService.loadUserByUsername(email));
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "token", token,
+                "user", new UserResponseDTO(user) // DTO sin información sensible
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                "status", "error",
+                "code", "SERVER_ERROR",
+                "message", "Error interno del servidor"
+            ));
+        }
     }
     
     @GetMapping("/me")
