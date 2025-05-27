@@ -1,13 +1,11 @@
 package com.uad.controllers;
 
 import com.uad.config.JwtUtil;
-import com.uad.dto.UserResponseDTO;
+import com.uad.dto.UserAuthResponseDTO;
 import com.uad.entities.UserEntity;
 import com.uad.repositories.UserRepository;
 import com.uad.services.AuthService;
-
 import io.jsonwebtoken.JwtException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -45,11 +42,12 @@ public class AuthController {
         try {
             // 1. Verificar si el usuario existe
             UserEntity user = userRepository.findByEmail(email);
-            if (user == null) {
+            UserAuthResponseDTO authResponse = authService.authenticateUser(email, password);
+            if (authResponse == null) {
                 return ResponseEntity.ok(Map.of(
                     "status", "error",
-                    "code", "USER_NOT_FOUND",
-                    "message", "El correo no está registrado"
+                    "code", "INVALID_CREDENTIALS",
+                    "message", "Credenciales inválidas"
                 ));
             }
 
@@ -68,7 +66,7 @@ public class AuthController {
             return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "token", token,
-                "user", new UserResponseDTO(user) // DTO sin información sensible
+                "user", authResponse // DTO sin información sensible
             ));
 
         } catch (Exception e) {
@@ -100,7 +98,10 @@ public class AuthController {
                 throw new UsernameNotFoundException("Usuario no encontrado");
             }
 
-            return ResponseEntity.ok(new UserResponseDTO(user));
+            return ResponseEntity.ok(new UserAuthResponseDTO(user,
+				userRepository.findUserRolesWithPermissions(email).stream().findFirst()
+					.orElseThrow(() -> new RuntimeException("Usuario sin roles asignados"))
+			));
             
         } catch (JwtException | IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

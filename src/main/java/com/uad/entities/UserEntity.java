@@ -1,6 +1,8 @@
 package com.uad.entities;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -44,4 +46,23 @@ public class UserEntity {
 	        }
 	        this.createdAt = new Date(); 
 	    }
+	    
+	  @Column(name = "status")
+	  private String status;
+	  
+	  @Column(name = "last_login")
+	  private Date lastLogin;
+	  
+	  @Column(name = "updated_at")
+	  private Date updatedAt;
+
+	    // Relación muchos a muchos con roles
+	  
+	  @ManyToMany(fetch = FetchType.EAGER)
+	    @JoinTable(
+	        name = "user_roles",
+	        joinColumns = @JoinColumn(name = "user_id"),
+	        inverseJoinColumns = @JoinColumn(name = "role_id")
+	    )
+	    private Set<Role> roles = new HashSet<>();
 }

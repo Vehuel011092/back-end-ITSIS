@@ -1,5 +1,6 @@
 package com.uad.services;
 
+import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,4 +34,30 @@ public class UserService {
         UserEntity savedUser = userRepository.save(user);
         return new UserResponseDTO(savedUser);
     }
+    
+    public UserResponseDTO updateUser(long id, UserEntity user) {
+		UserEntity existingUser = userRepository.findById(id).orElse(null);
+		Date currentDate = new Date();
+		if (existingUser == null) {
+			throw new RuntimeException("Usuario no encontrado");
+		}
+		existingUser.setName(user.getName());
+		existingUser.setEmail(user.getEmail());
+		existingUser.setStatus(user.getStatus());
+		existingUser.setRoles(user.getRoles());
+		existingUser.setUpdatedAt(currentDate);
+		UserEntity updatedUser = userRepository.save(existingUser);
+		return new UserResponseDTO(updatedUser);
+	}
+	
+	public void deleteUser(long id) {
+		UserEntity user = userRepository.findById(id).orElse(null);
+		if (user == null) {
+			throw new RuntimeException("Usuario no encontrado");
+		}
+		userRepository.delete(user);
+	}
+	public boolean userExists(String email) {
+		return userRepository.existsByEmail(email);
+	}
 }
