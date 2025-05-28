@@ -1,12 +1,19 @@
 package com.uad.services;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uad.dto.UserAuthResponseDTO;
 import com.uad.dto.UserResponseDTO;
 import com.uad.entities.UserEntity;
+import com.uad.projection.RoleProjection;
 import com.uad.repositories.UserRepository;
 
 @Service
@@ -60,4 +67,42 @@ public class UserService {
 	public boolean userExists(String email) {
 		return userRepository.existsByEmail(email);
 	}
+	
+	public UserAuthResponseDTO getUserWithPermissions(String email) {
+        UserEntity user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException("Usuario no encontrado");
+        }
+        
+        // Obtener roles y permisos
+        List<RoleProjection> roles = userRepository.findUserRolesWithPermissions(email);
+        
+        return new UserAuthResponseDTO(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getStatus(),
+            roles.isEmpty() ? "Sin rol" : roles.get(0).getRoleName(),
+            parsePermissions(roles)
+        );
+    }
+    
+    private Map<String, Boolean> parsePermissions(List<RoleProjection> roles) {
+        Map<String, Boolean> combinedPermissions = new HashMap<>();
+        for (RoleProjection role : roles) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, Boolean> permMap = mapper.readValue(
+                    role.getPermissions(), 
+                    new TypeReference<Map<String, Boolean>>(){}
+                );
+                permMap.forEach((key, value) -> 
+                    combinedPermissions.merge(key, value, (oldVal, newVal) -> oldVal || newVal)
+                );
+            } catch (JsonProcessingException e) {
+                // Manejar error
+            }
+        }
+        return combinedPermissions;
+    }
 }

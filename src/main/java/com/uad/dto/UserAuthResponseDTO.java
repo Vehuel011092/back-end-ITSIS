@@ -18,6 +18,15 @@ public class UserAuthResponseDTO {
     private String status;
     private String role;
     private Map<String, Boolean> permissions;
+    
+    public UserAuthResponseDTO(Long id, String name, String email, String status, String role, Map<String, Boolean> permissions) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.status = status;
+        this.role = role;
+        this.permissions = permissions;
+    }
 
     // Constructor desde la entidad y consulta
     public UserAuthResponseDTO(UserEntity user, RoleProjection roleInfo) {

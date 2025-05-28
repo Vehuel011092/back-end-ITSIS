@@ -7,15 +7,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.uad.config.JwtUtil;
+import com.uad.dto.UserAuthResponseDTO;
 import com.uad.dto.UserResponseDTO;
 import com.uad.entities.UserEntity;
 import com.uad.services.UserService;
-
 import jakarta.validation.Valid;
-
 import java.util.List;
 
 @RestController
@@ -23,6 +23,10 @@ import java.util.List;
 public class UserController {
     @Autowired
     UserService userService;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
     
     @GetMapping("/{id}")
     public ResponseEntity<UserEntity> getUserById(@PathVariable long id) {
@@ -33,6 +37,31 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 	}
+    
+    @GetMapping("/current-user")
+    public ResponseEntity<UserAuthResponseDTO> getCurrentUser(
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            // Extraer token del header
+            String token = authHeader.replace("Bearer ", "");
+            
+            // Validar token
+            if (!jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            // Obtener email del token
+            String email = jwtUtil.extractUsername(token);
+            
+            // Buscar usuario en la base de datos
+            UserAuthResponseDTO user = userService.getUserWithPermissions(email);
+            
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     
     
     @GetMapping
