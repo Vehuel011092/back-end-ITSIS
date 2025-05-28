@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -62,7 +63,11 @@ public class AuthController {
 
             // 3. Generar token si todo es correcto
             String token = jwtUtil.generateToken(authService.loadUserByUsername(email));
-            
+            UserEntity existingUser = userRepository.findByEmail(email);
+    		Date currentDate = new Date();
+    		existingUser.setLastLogin(currentDate);
+    		userRepository.save(existingUser);
+
             return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "token", token,
