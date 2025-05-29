@@ -10,13 +10,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uad.config.JwtUtil;
 import com.uad.dto.UserAuthResponseDTO;
 import com.uad.dto.UserResponseDTO;
 import com.uad.entities.UserEntity;
 import com.uad.services.UserService;
 import jakarta.validation.Valid;
+
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -65,8 +73,42 @@ public class UserController {
     
     
     @GetMapping
-    public ResponseEntity<List<UserEntity>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
+        List<UserEntity> users = userService.getAllUsersWithRoles();
+        
+        List<Map<String, Object>> response = users.stream().map(user -> {
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("id", user.getId());
+            userMap.put("createAt", user.getCreatedAt());
+            userMap.put("name", user.getName());
+            userMap.put("email", user.getEmail());
+            userMap.put("status", user.getStatus());
+            
+            // Mapear roles
+            List<Map<String, Object>> rolesList = user.getRoles().stream().map(role -> {
+                Map<String, Object> roleMap = new HashMap<>();
+                roleMap.put("name", role.getRoleName());
+                
+                try {
+                    // Parsear los permisos JSON
+                    ObjectMapper mapper = new ObjectMapper();
+                    Map<String, Boolean> permissions = mapper.readValue(
+                        role.getPermissions(), 
+                        new TypeReference<Map<String, Boolean>>(){}
+                    );
+                    roleMap.put("permissions", permissions);
+                } catch (Exception e) {
+                    roleMap.put("permissions", Collections.emptyMap());
+                }
+                
+                return roleMap;
+            }).collect(Collectors.toList());
+            
+            userMap.put("roles", rolesList);
+            return userMap;
+        }).collect(Collectors.toList());
+        
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping()

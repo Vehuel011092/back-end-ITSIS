@@ -25,6 +25,10 @@ public class UserService {
         return userRepository.findAll(); 
     }
     
+    public List<UserEntity> getAllUsersWithRoles() {
+        return userRepository.findAllWithRoles(); // Usaremos un método personalizado
+    }
+    
     public UserEntity getUserById(long id) {
         return userRepository.findById(id).orElse(null);
     }

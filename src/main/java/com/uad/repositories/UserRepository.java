@@ -11,6 +11,8 @@ import com.uad.projection.RoleProjection;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
+	@Query("SELECT DISTINCT u FROM UserEntity u LEFT JOIN FETCH u.roles")
+    List<UserEntity> findAllWithRoles();
 	 Optional<UserEntity> findById(Long id);
 	 UserEntity findByEmail(String email);
 	 UserEntity findByName(String name);
