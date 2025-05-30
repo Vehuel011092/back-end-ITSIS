@@ -3,6 +3,7 @@ package com.uad.repositories;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,11 @@ import com.uad.projection.RoleProjection;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 	@Query("SELECT DISTINCT u FROM UserEntity u LEFT JOIN FETCH u.roles")
     List<UserEntity> findAllWithRoles();
+	
+	@Modifying
+    @Query("DELETE FROM UserEntity u WHERE u.id = :userId")
+    void deleteUser(@Param("userId") Long userId);
+	
 	 Optional<UserEntity> findById(Long id);
 	 UserEntity findByEmail(String email);
 	 UserEntity findByName(String name);

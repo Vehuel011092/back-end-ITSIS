@@ -21,7 +21,7 @@ public class Role {
  @Column(name = "role_name")
  private String roleName;
  
- @Column(name = "permissions")
+ @Column(name = "permissions", columnDefinition = "jsonb")
  private String permissions;
 
 }
