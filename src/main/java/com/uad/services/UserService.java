@@ -79,6 +79,7 @@ public class UserService {
 		if (existingUser == null) {
 			throw new RuntimeException("Usuario no encontrado");
 		}
+		System.out.println(existingUser);
 		existingUser.setName(user.getName());
 		existingUser.setEmail(user.getEmail());
 		existingUser.setStatus(user.getStatus());
