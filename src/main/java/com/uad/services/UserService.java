@@ -79,8 +79,6 @@ public class UserService {
         UserEntity existingUser = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
-        System.out.println("Usuario: " + userUpdate);
-        
         // Actualizar campos básicos
         existingUser.setName(userUpdate.getName());
         existingUser.setEmail(userUpdate.getEmail());

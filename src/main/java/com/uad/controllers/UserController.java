@@ -172,7 +172,6 @@ public class UserController {
     
     @PutMapping("/update-user/{id}")
     public ResponseEntity<?> updateUser(@RequestBody UserUpdateDTO user, @PathVariable Long id) {
-    	System.out.println("Usuario con datos: "+user);
 		try {
 			UserResponseDTO updatedUser = userService.updateUser(id, user);
 			return ResponseEntity.ok(updatedUser);
