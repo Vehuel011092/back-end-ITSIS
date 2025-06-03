@@ -18,6 +18,7 @@ import com.uad.config.JwtUtil;
 import com.uad.dto.RegisterUserRequestDTO;
 import com.uad.dto.UserAuthResponseDTO;
 import com.uad.dto.UserResponseDTO;
+import com.uad.dto.UserUpdateDTO;
 import com.uad.entities.UserEntity;
 import com.uad.services.RoleService;
 import com.uad.services.UserService;
@@ -170,7 +171,8 @@ public class UserController {
     }
     
     @PutMapping("/update-user/{id}")
-    public ResponseEntity<?> updateUser(@RequestBody UserEntity user, @PathVariable Long id) {
+    public ResponseEntity<?> updateUser(@RequestBody UserUpdateDTO user, @PathVariable Long id) {
+    	System.out.println("Usuario con datos: "+user);
 		try {
 			UserResponseDTO updatedUser = userService.updateUser(id, user);
 			return ResponseEntity.ok(updatedUser);

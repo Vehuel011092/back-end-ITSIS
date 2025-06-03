@@ -2,6 +2,7 @@ package com.uad.services;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uad.dto.RegisterUserRequestDTO;
 import com.uad.dto.UserAuthResponseDTO;
 import com.uad.dto.UserResponseDTO;
+import com.uad.dto.UserUpdateDTO;
 import com.uad.entities.Role;
 import com.uad.entities.UserEntity;
 import com.uad.projection.RoleProjection;
@@ -73,21 +75,29 @@ public class UserService {
         return new UserResponseDTO(savedUser);
     }
     
-    public UserResponseDTO updateUser(long id, UserEntity user) {
-		UserEntity existingUser = userRepository.findById(id).orElse(null);
-		Date currentDate = new Date();
-		if (existingUser == null) {
-			throw new RuntimeException("Usuario no encontrado");
-		}
-		System.out.println(existingUser);
-		existingUser.setName(user.getName());
-		existingUser.setEmail(user.getEmail());
-		existingUser.setStatus(user.getStatus());
-		existingUser.setRoles(user.getRoles());
-		existingUser.setUpdatedAt(currentDate);
-		UserEntity updatedUser = userRepository.save(existingUser);
-		return new UserResponseDTO(updatedUser);
-	}
+    public UserResponseDTO updateUser(long id, UserUpdateDTO userUpdate) {
+        UserEntity existingUser = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        System.out.println("Usuario: " + userUpdate);
+        
+        // Actualizar campos básicos
+        existingUser.setName(userUpdate.getName());
+        existingUser.setEmail(userUpdate.getEmail());
+        existingUser.setStatus(userUpdate.getStatus());
+        
+     // Convertir IDs a entidades Role
+        Set<Role> roles = new HashSet<>();
+        for (Long roleId : userUpdate.getRoleIds()) {
+            Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Rol no encontrado: " + roleId));
+            roles.add(role);
+        }
+        existingUser.setRoles(roles);
+        
+        existingUser.setUpdatedAt(new Date());
+        return new UserResponseDTO(userRepository.save(existingUser));
+    }
 	
     @Transactional
     public ResponseEntity<?> deleteUserById(Long id) {
