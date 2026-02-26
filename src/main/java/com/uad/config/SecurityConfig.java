@@ -60,14 +60,17 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200")); // Origen permitido
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Métodos permitidos
-        config.setAllowedHeaders(List.of("*")); // Headers permitidos
-        config.setExposedHeaders(List.of("Authorization")); // Headers expuestos
-        config.setAllowCredentials(true); // Permite cookies/credenciales
+        config.setAllowedOrigins(List.of(
+            "http://localhost:4200",                // desarrollo local
+            "https://it-system.up.railway.app"      // producción en Railway
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true); // importante si usas cookies o tokens en headers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config); // Aplica a todas las rutas
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
